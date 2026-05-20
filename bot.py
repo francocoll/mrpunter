@@ -312,7 +312,13 @@ async def cmd_agregar(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
         lines.append(f"\n<b>No encontradas:</b>")
         lines += [f"  ❌ <code>{H(i)}</code>" for i in not_found]
 
-    await update.message.reply_text("\n".join(lines) or "Sin cambios.", parse_mode=ParseMode.HTML)
+    full = "\n".join(lines) or "Sin cambios."
+    try:
+        for chunk in _split_message(full):
+            await update.message.reply_text(chunk, parse_mode=ParseMode.HTML)
+    except Exception as e:
+        logger.error("cmd_agregar reply error: %s", e)
+        await update.message.reply_text(f"✅ Proceso completado ({len(added)} agregadas, {len(not_found)} no encontradas).")
 
 
 async def cmd_ligas(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
