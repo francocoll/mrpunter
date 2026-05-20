@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 from pathlib import Path
@@ -13,6 +14,13 @@ def _load(path: Path, default) -> dict | list:
     if path.exists():
         with open(path, encoding="utf-8") as f:
             return json.load(f)
+    # On first run (e.g. Railway with empty volume), seed from env var SEED_<STEM>
+    seed_env = f"SEED_{path.stem.upper()}"
+    seed_b64 = os.environ.get(seed_env)
+    if seed_b64:
+        data = json.loads(base64.b64decode(seed_b64).decode())
+        _save(path, data)
+        return data
     return default
 
 
