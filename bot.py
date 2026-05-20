@@ -300,7 +300,9 @@ async def cmd_agregar(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
                 storage.add_favorite(lg.league_id, lg.name, lg.country)
                 added.append(f"{H(lg.country)} — {H(lg.name)}")
             else:
-                not_found.append(lid)
+                # Liga fuera de temporada: guardar igual con nombre pendiente
+                storage.add_favorite(lid, f"Liga {lid}", "")
+                added.append(f"<i>(sin temporada activa)</i> — <code>{lid}</code>")
 
     lines = []
     if added:
