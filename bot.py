@@ -274,6 +274,24 @@ async def cmd_agregar(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
             lines.append(f"\n<i>Ya estaban en favoritos: {len(skipped)}</i>")
 
         await msg.edit_text("\n".join(lines), parse_mode=ParseMode.HTML)
+
+        # Mostrar partidos de las ligas recién agregadas
+        if added:
+            new_ids = {lg.league_id for lg in added}
+            try:
+                matches = await get_events_for_leagues(new_ids)
+            except Exception:
+                matches = []
+            if matches:
+                matches.sort(key=lambda m: (not m.is_live, m.start_time))
+                by_league: dict[str, list] = {}
+                for m in matches:
+                    by_league.setdefault(m.league_name, []).append(m)
+                blocks = ["⚽ <b>Partidos disponibles:</b>\n"]
+                for league_name, lms in sorted(by_league.items()):
+                    blocks.append(f"🏆 <b>{H(league_name)}</b>\n" + "\n\n".join(_fmt_match(m) for m in lms))
+                for chunk in _split_message("\n\n".join(blocks)):
+                    await update.message.reply_text(chunk, parse_mode=ParseMode.HTML)
         return
 
     # Add by IDs
